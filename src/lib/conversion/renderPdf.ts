@@ -77,9 +77,12 @@ function drawRightText(
   });
 }
 
+export type PdfVariant = "office" | "driver";
+
 export async function renderPivotPdf(
   pivot: PivotResult,
   comments: string,
+  variant: PdfVariant = "office",
 ): Promise<Uint8Array> {
   const doc = await PDFDocument.create();
   const { regular, bold } = await loadFonts(doc);
@@ -87,6 +90,8 @@ export async function renderPivotPdf(
   let page = doc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
   let y = PAGE_HEIGHT - MARGIN;
   let stripe = 0;
+  // Driver sample titles the sheet as "DR1249-"
+  const title = variant === "driver" ? `${pivot.drCode}-` : pivot.drCode;
 
   const ensureSpace = (needed: number) => {
     if (y - needed < MARGIN) {
@@ -211,7 +216,7 @@ export async function renderPivotPdf(
   };
 
   // Title + Russian column labels (kept as full phrases for sample/agent match)
-  page.drawText(pivot.drCode, {
+  page.drawText(title, {
     x: COL_NAME_X,
     y: y - 16,
     size: 18,

@@ -3,7 +3,7 @@ import path from "path";
 import { prisma } from "../db";
 import { pdfsDir, uploadsDir } from "../paths";
 import { parseExcelBuffer } from "./parseExcel";
-import { buildPivot, type MarkAliases } from "./pivot";
+import { buildPivot, toDriverPivot, type MarkAliases } from "./pivot";
 import { renderPivotPdf } from "./renderPdf";
 import type { PivotResult } from "../types";
 import type { ConversionStatus } from "@prisma/client";
@@ -11,6 +11,32 @@ import type { ConversionStatus } from "@prisma/client";
 async function ensureDirs() {
   await fs.mkdir(uploadsDir(), { recursive: true });
   await fs.mkdir(pdfsDir(), { recursive: true });
+}
+
+function officePdfPath(conversionId: string) {
+  return path.join(pdfsDir(), `${conversionId}.pdf`);
+}
+
+function driverPdfPath(conversionId: string) {
+  return path.join(pdfsDir(), `${conversionId}-driver.pdf`);
+}
+
+async function writeBothPdfs(
+  conversionId: string,
+  pivot: PivotResult,
+  comments: string,
+) {
+  const officeBytes = await renderPivotPdf(pivot, comments, "office");
+  const driverBytes = await renderPivotPdf(
+    toDriverPivot(pivot),
+    comments,
+    "driver",
+  );
+  const pdfPath = officePdfPath(conversionId);
+  const driverPath = driverPdfPath(conversionId);
+  await fs.writeFile(pdfPath, officeBytes);
+  await fs.writeFile(driverPath, driverBytes);
+  return { pdfPath, driverPath };
 }
 
 export function parseAliases(json: string): MarkAliases {
@@ -61,9 +87,11 @@ export async function createConversionFromUpload(
 
   const sourcePath = path.join(uploadsDir(), `${conversion.id}.xlsx`);
   await fs.writeFile(sourcePath, buffer);
-  const pdfBytes = await renderPivotPdf(pivot, initialComments);
-  const pdfPath = path.join(pdfsDir(), `${conversion.id}.pdf`);
-  await fs.writeFile(pdfPath, pdfBytes);
+  const { pdfPath } = await writeBothPdfs(
+    conversion.id,
+    pivot,
+    initialComments,
+  );
 
   await prisma.conversion.update({
     where: { id: conversion.id },
@@ -90,9 +118,11 @@ export async function regeneratePdf(conversionId: string) {
     conversion.palletNote || parsed.palletNote,
     aliases,
   );
-  const pdfBytes = await renderPivotPdf(pivot, conversion.comments);
-  const pdfPath = conversion.pdfPath || path.join(pdfsDir(), `${conversion.id}.pdf`);
-  await fs.writeFile(pdfPath, pdfBytes);
+  const { pdfPath } = await writeBothPdfs(
+    conversionId,
+    pivot,
+    conversion.comments,
+  );
 
   return prisma.conversion.update({
     where: { id: conversionId },
@@ -103,6 +133,16 @@ export async function regeneratePdf(conversionId: string) {
       status: "generated" as ConversionStatus,
     },
   });
+}
+
+export function resolveDriverPdfPath(conversion: {
+  id: string;
+  pdfPath: string | null;
+}) {
+  if (conversion.pdfPath?.endsWith(".pdf")) {
+    return conversion.pdfPath.replace(/\.pdf$/, "-driver.pdf");
+  }
+  return driverPdfPath(conversion.id);
 }
 
 export async function updateConversionFields(

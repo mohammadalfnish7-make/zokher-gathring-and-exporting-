@@ -63,3 +63,20 @@ export function buildPivot(
 export function round1(n: number): number {
   return Math.round(n * 10) / 10;
 }
+
+/** Driver PDF: keep TL/mark digits, drop shop names, merge shops into one N/A line. */
+export function toDriverPivot(pivot: PivotResult): PivotResult {
+  return {
+    ...pivot,
+    marks: pivot.marks.map((mark) => ({
+      ...mark,
+      shops: [
+        {
+          shop: "N/A",
+          cartons: mark.cartons,
+          weight: mark.weight,
+        },
+      ],
+    })),
+  };
+}

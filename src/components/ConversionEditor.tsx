@@ -256,9 +256,9 @@ export function ConversionEditor({
         <div className="flex flex-wrap gap-2">
           <a
             className="btn btn-secondary !px-3 !py-1.5 text-sm"
-            href={`/api/conversions/${conversion.id}/download?kind=pdf`}
+            href={`/api/conversions/${conversion.id}/download?kind=pdfs`}
           >
-            Download PDF
+            Download PDFs
           </a>
           <a
             className="btn btn-secondary !px-3 !py-1.5 text-sm"
@@ -271,7 +271,7 @@ export function ConversionEditor({
             onClick={regenerate}
             disabled={!!busy}
           >
-            {busy === "regen" ? "Regenerating…" : "Regenerate PDF"}
+            {busy === "regen" ? "Regenerating…" : "Regenerate PDFs"}
           </button>
           <button
             className="btn btn-primary !px-3 !py-1.5 text-sm"
