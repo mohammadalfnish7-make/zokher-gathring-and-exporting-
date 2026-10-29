@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum ConversionStatus {
+  draft
+  generated
+  needs_fix
+  verified
+}
+
+model Conversion {
+  id             String           @id @default(cuid())
+  drCode         String
+  status         ConversionStatus @default(draft)
+  sourceFilename String
+  sourcePath     String
+  pdfPath        String?
+  pivotJson      String
+  comments       String           @default("")
+  palletNote     String           @default("")
+  markAliasesJson String          @default("{}")
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  edits          ConversionEdit[]
+  agentRuns      AgentRun[]
+}
+
+model ConversionEdit {
+  id           String     @id @default(cuid())
+  conversionId String
+  conversion   Conversion @relation(fields: [conversionId], references: [id], onDelete: Cascade)
+  field        String
+  oldValue     String
+  newValue     String
+  createdAt    DateTime   @default(now())
+}
+
+model AgentRun {
+  id            String         @id @default(cuid())
+  conversionId  String
+  conversion    Conversion     @relation(fields: [conversionId], references: [id], onDelete: Cascade)
+  confidence    Int
+  passed        Boolean
+  summary       String
+  errorsJson    String
+  fixStepsJson  String
+  model         String
+  createdAt     DateTime       @default(now())
+  messages      AgentMessage[]
+}
+
+model AgentMessage {
+  id         String   @id @default(cuid())
+  agentRunId String
+  agentRun   AgentRun @relation(fields: [agentRunId], references: [id], onDelete: Cascade)
+  role       String
+  content    String
+  rawJson    String?
+  sequence   Int
+  createdAt  DateTime @default(now())
+}

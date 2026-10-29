@@ -1,0 +1,233 @@
+@import "tailwindcss";
+
+:root {
+  /* Karam Al Arab visual identity */
+  --brand-blue: #1769ff;
+  --brand-blue-deep: #1432c6;
+  --brand-blue-soft: #94c0ff;
+  --background: #ecf1f8;
+  --foreground: #14212b;
+  --panel: #ffffff;
+  --ink: #000000;
+  --muted: #757474;
+  --line: #b7c8e5;
+  --accent: #1769ff;
+  --accent-soft: rgba(148, 192, 255, 0.28);
+  --danger: #b91c1c;
+  --warn: #b45309;
+  --ok: #15803d;
+  --site-header-h: 4.25rem;
+  --ui-scale: 1;
+}
+
+html {
+  /* rem-based scale (no zoom) so viewport layouts stay stable */
+  font-size: calc(16px * var(--ui-scale));
+}
+
+.conversion-page,
+.desk-page {
+  overscroll-behavior: none;
+  min-height: 0;
+  height: calc(100dvh - var(--site-header-h) - 1.5rem);
+  max-height: calc(100dvh - var(--site-header-h) - 1.5rem);
+}
+
+body:has(.conversion-page),
+body:has(.desk-page) {
+  overflow: hidden;
+  height: 100dvh;
+}
+
+body:has(.conversion-page) main,
+body:has(.desk-page) main {
+  min-height: 0;
+  overflow: hidden;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+.conversion-hero {
+  position: relative;
+  z-index: 1;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background:
+    linear-gradient(
+      90deg,
+      color-mix(in oklab, #94c0ff 28%, white),
+      color-mix(in oklab, #ecf1f8 90%, white)
+    );
+}
+
+.pivot-scroll {
+  min-height: 0;
+  height: 100%;
+  flex: 1 1 0;
+  overflow-x: auto;
+  overflow-y: scroll;
+  overscroll-behavior: contain;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: white;
+}
+
+.pivot-scroll thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #ecf1f8;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-montserrat);
+  --font-display: var(--font-montserrat);
+}
+
+body {
+  background:
+    radial-gradient(circle at 8% 0%, rgba(148, 192, 255, 0.35) 0%, transparent 42%),
+    radial-gradient(circle at 92% 8%, rgba(23, 105, 255, 0.12) 0%, transparent 38%),
+    var(--background);
+  color: var(--foreground);
+  font-family: var(--font-montserrat), "Segoe UI", sans-serif;
+  min-height: 100vh;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-montserrat), "Segoe UI", sans-serif;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+
+.panel {
+  background: color-mix(in oklab, var(--panel) 96%, white);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: 0 5px 25px 0 #b7c8e53d;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border-radius: 12px;
+  padding: 0.65rem 1.1rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: transform 0.15s ease, background 0.15s ease, opacity 0.15s ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  transform: none;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: var(--brand-blue-deep);
+}
+
+.btn-secondary {
+  background: white;
+  border: 1px solid var(--line);
+  color: var(--ink);
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.2rem 0.7rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.status-draft,
+.status-generated {
+  background: #e7e5e4;
+  color: #44403c;
+}
+
+.status-needs_fix {
+  background: #ffedd5;
+  color: var(--warn);
+}
+
+.status-verified {
+  background: #dcfce7;
+  color: var(--ok);
+}
+
+.table-wrap {
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+table.data {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+table.data th,
+table.data td {
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+}
+
+table.data th {
+  background: #ecf1f8;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+/* Strict adjacent zebra across ALL data rows (mark + shop) */
+table.data tbody tr.data-row:nth-child(odd) td {
+  background: #e8f1ff;
+}
+
+table.data tbody tr.data-row:nth-child(even) td {
+  background: #f5f8fc;
+}
+
+table.data tr.mark-row td {
+  font-weight: 700;
+}
+
+table.data tr.shop-row td:first-child {
+  padding-left: 1.5rem;
+  color: #334155;
+}
+
+table.data tr.total-row td {
+  font-weight: 700;
+  background: #dbe8ff;
+}
+
+table.data td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--brand-blue-deep);
+}
