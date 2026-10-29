@@ -34,11 +34,15 @@ export function buildPivot(
   const marks: MarkAggregate[] = [...byMark.entries()]
     .sort(([a], [b]) => compareMarks(a, b))
     .map(([mark, shopsMap]) => {
-      const shops = [...shopsMap.entries()].map(([shop, totals]) => ({
-        shop,
-        cartons: round1(totals.cartons),
-        weight: round1(totals.weight),
-      }));
+      const shops = [...shopsMap.entries()]
+        .map(([shop, totals]) => ({
+          shop,
+          cartons: round1(totals.cartons),
+          weight: round1(totals.weight),
+        }))
+        .sort((a, b) =>
+          a.shop.localeCompare(b.shop, undefined, { sensitivity: "base" }),
+        );
       const cartons = round1(shops.reduce((s, x) => s + x.cartons, 0));
       const weight = round1(shops.reduce((s, x) => s + x.weight, 0));
       return {

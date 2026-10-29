@@ -1,7 +1,7 @@
 export function normalizeDrCode(raw: string): string {
   const cleaned = raw.trim().toUpperCase().replace(/\s+/g, "");
-  const match = cleaned.match(/DR-?(\d+)/i);
-  if (match) return `DR${match[1]}`;
+  const match = cleaned.match(/^(DR|AR)-?(\d+)/i);
+  if (match) return `${match[1].toUpperCase()}${match[2]}`;
   return cleaned.replace(/-/g, "");
 }
 

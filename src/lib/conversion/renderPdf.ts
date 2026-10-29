@@ -90,8 +90,13 @@ export async function renderPivotPdf(
   let page = doc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
   let y = PAGE_HEIGHT - MARGIN;
   let stripe = 0;
-  // Driver sample titles the sheet as "DR1249-"
-  const title = variant === "driver" ? `${pivot.drCode}-` : pivot.drCode;
+  // Sea driver sample is "DR1249-". Air driver sample is "AR090 -".
+  const title =
+    variant === "driver"
+      ? /^AR/i.test(pivot.drCode)
+        ? `${pivot.drCode} -`
+        : `${pivot.drCode}-`
+      : pivot.drCode;
 
   const ensureSpace = (needed: number) => {
     if (y - needed < MARGIN) {

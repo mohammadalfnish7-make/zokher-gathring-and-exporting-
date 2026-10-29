@@ -8,6 +8,7 @@ import { extractPdfFacts } from "./extractPdfFacts";
 import { deterministicCompare, confidenceFromErrors } from "./compare";
 
 const dataDir = path.join(process.cwd(), "data");
+const airDir = path.join(process.cwd(), "data air");
 
 describe("Excel pivot fixtures", () => {
   it("DR-1249 totals match sample PDF", () => {
@@ -98,5 +99,67 @@ describe("PDF round-trip verification", () => {
     expect(facts.text).toContain("N/A");
     expect(facts.text).not.toContain("LA PERFUME");
     expect(facts.text).not.toContain("REEF PERFUME");
+  }, 30000);
+});
+
+describe("Air AR090", () => {
+  function airPivot() {
+    const buf = fs.readFileSync(path.join(airDir, "AR090.xlsx"));
+    const parsed = parseExcelBuffer(buf, "AR090.xlsx");
+    return buildPivot(parsed.drCode, parsed.lines, parsed.palletNote);
+  }
+
+  it("reads ON THE FLOOR and matches the office PDF totals", () => {
+    const buf = fs.readFileSync(path.join(airDir, "AR090.xlsx"));
+    const parsed = parseExcelBuffer(buf, "AR090.xlsx");
+    const pivot = buildPivot(parsed.drCode, parsed.lines, parsed.palletNote);
+    expect(parsed.sheetName.trim()).toBe("ON THE FLOOR");
+    expect(parsed.lines).toHaveLength(16);
+    expect(pivot.drCode).toBe("AR090");
+    expect(pivot.totalCartons).toBe(83);
+    expect(pivot.totalWeight).toBe(2141);
+    const tl1766 = pivot.marks.find((m) => m.mark === "TL1766");
+    expect(tl1766?.cartons).toBe(43);
+    expect(tl1766?.weight).toBe(1104.5);
+    expect(tl1766?.shops.map((s) => s.shop)[0]).toBe("ADAN BREEZE");
+    expect(pivot.marks.find((m) => m.mark === "TL2009")?.shops[0]?.shop).toBe(
+      "N/A",
+    );
+  });
+
+  it("driver pivot keeps TL marks and merges shops", () => {
+    const driver = toDriverPivot(airPivot());
+    expect(driver.marks.map((m) => m.displayMark)).toEqual([
+      "TL1766",
+      "TL2009",
+      "TL6780",
+      "TL7075",
+      "TL8134",
+      "TL8939",
+    ]);
+    expect(driver.marks.every((m) => m.shops[0]?.shop === "N/A")).toBe(true);
+    expect(driver.totalCartons).toBe(83);
+  });
+
+  it("office and driver PDFs match the air sample shape", async () => {
+    const pivot = airPivot();
+    const office = await renderPivotPdf(pivot, "", "office");
+    const driver = await renderPivotPdf(toDriverPivot(pivot), "", "driver");
+    const officeFacts = await extractPdfFacts(
+      office,
+      pivot.marks.map((m) => m.mark),
+    );
+    const driverFacts = await extractPdfFacts(
+      driver,
+      pivot.marks.map((m) => m.mark),
+    );
+    expect(deterministicCompare(pivot, officeFacts)).toEqual([]);
+    expect(officeFacts.drCode).toBe("AR090");
+    expect(officeFacts.text).toContain("CROWN STAR");
+    expect(driverFacts.totalCartons).toBe(83);
+    expect(driverFacts.totalWeight).toBe(2141);
+    expect(driverFacts.text).toContain("AR090 -");
+    expect(driverFacts.text).toContain("N/A");
+    expect(driverFacts.text).not.toContain("CROWN STAR");
   }, 30000);
 });

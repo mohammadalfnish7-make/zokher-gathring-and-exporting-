@@ -44,7 +44,7 @@ export async function extractPdfFacts(
     ),
   );
 
-  const drMatch = text.match(/\bDR-?\d+\b/i);
+  const drMatch = text.match(/\b(?:DR|AR)-?\d+\b/i);
   const totalMatch = text.match(
     /Общий итог\s+([\d\s.,]+)\s+([\d\s.,]+)/i,
   );
@@ -53,7 +53,7 @@ export async function extractPdfFacts(
   for (const line of text.split(/\n+/)) {
     const m = line
       .trim()
-      .match(/^([A-Za-z0-9][A-Za-z0-9 _.-]*?)\s+([\d.,]+)\s+([\d.,]+)\s*$/);
+      .match(/^([A-Za-z0-9][A-Za-z0-9 _./-]*?)\s+([\d.,]+)\s+([\d.,]+)\s*$/);
     if (!m) continue;
     const label = m[1].trim();
     if (/названия|сумма|общий/i.test(label)) continue;
@@ -88,7 +88,9 @@ export async function extractPdfFacts(
 
   return {
     text,
-    drCode: drMatch ? drMatch[0].toUpperCase().replace("-", "") : null,
+    drCode: drMatch
+      ? drMatch[0].toUpperCase().replace("-", "").replace(/\s+/g, "")
+      : null,
     totalCartons: totalMatch ? parseNumber(totalMatch[1]) : null,
     totalWeight: totalMatch ? parseNumber(totalMatch[2]) : null,
     marks,
