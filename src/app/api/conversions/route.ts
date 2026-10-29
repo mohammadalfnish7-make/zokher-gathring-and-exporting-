@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { verifyConversion } from "@/lib/agent/persist";
 import { createConversionFromUpload } from "@/lib/conversion/service";
 
 export const runtime = "nodejs";
+export const maxDuration = 120;
 
 export async function GET() {
   const conversions = await prisma.conversion.findMany({
@@ -31,7 +33,11 @@ export async function POST(request: Request) {
       );
     }
     const { id } = await createConversionFromUpload(file);
-    return NextResponse.json({ id }, { status: 201 });
+    const { result } = await verifyConversion(id);
+    return NextResponse.json(
+      { id, confidence: result.confidence },
+      { status: 201 },
+    );
   } catch (error) {
     console.error(error);
     return NextResponse.json(

@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
+import { verifyConversion } from "@/lib/agent/persist";
 import { prisma } from "@/lib/db";
 import { updateConversionFields } from "@/lib/conversion/service";
 
 export const runtime = "nodejs";
+export const maxDuration = 120;
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -33,7 +35,11 @@ export async function PATCH(request: Request, { params }: Params) {
       palletNote: body.palletNote,
       markAliases: body.markAliases,
     });
-    return NextResponse.json({ conversion: updated });
+    const { result } = await verifyConversion(id);
+    return NextResponse.json({
+      conversion: updated,
+      confidence: result.confidence,
+    });
   } catch (error) {
     console.error(error);
     return NextResponse.json(

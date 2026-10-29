@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { StatusBadge } from "./StatusBadge";
 import { formatNumber } from "@/lib/conversion/normalize";
 import type { SerializedConversion } from "@/lib/conversion/serialize";
@@ -49,6 +49,23 @@ export function ConversionEditor({
       runId: last.id,
     };
   });
+
+  useEffect(() => {
+    const last = conversion.agentRuns[0];
+    if (!last) {
+      setVerifyResult(null);
+      return;
+    }
+    setVerifyResult({
+      confidence: last.confidence,
+      summary: last.summary,
+      errors: JSON.parse(last.errorsJson) as VerificationError[],
+      fixSteps: JSON.parse(last.fixStepsJson) as string[],
+      runId: last.id,
+    });
+  }, [conversion.id, conversion.agentRuns, conversion.status]);
+
+  const canDownload = conversion.status === "verified";
 
   async function saveEdits() {
     setBusy("save");
@@ -117,6 +134,7 @@ export function ConversionEditor({
   }
 
   function downloadBothPdfs() {
+    if (!canDownload) return;
     const base = `/api/conversions/${conversion.id}/download`;
     const trigger = (kind: string) => {
       const a = document.createElement("a");
@@ -273,8 +291,14 @@ export function ConversionEditor({
             type="button"
             className="btn btn-secondary !px-3 !py-1.5 text-sm"
             onClick={downloadBothPdfs}
+            disabled={!canDownload || !!busy}
+            title={
+              canDownload
+                ? "Download office and driver PDFs"
+                : "Locked until verification is 100%"
+            }
           >
-            Download PDFs
+            {canDownload ? "Download PDFs" : "PDFs locked"}
           </button>
           <a
             className="btn btn-secondary !px-3 !py-1.5 text-sm"

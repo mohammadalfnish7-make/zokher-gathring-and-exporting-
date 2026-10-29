@@ -15,6 +15,26 @@ function cellString(value: unknown): string {
   return String(value).trim();
 }
 
+/** Sample workbooks have one stray cell near row 1,047,947. Walking that gap takes seconds. */
+function denseRange(sheet: XLSX.WorkSheet): XLSX.Range | undefined {
+  const rowSet = new Set<number>();
+  let maxC = 0;
+  for (const key of Object.keys(sheet)) {
+    if (key.startsWith("!")) continue;
+    const cell = XLSX.utils.decode_cell(key);
+    rowSet.add(cell.r);
+    if (cell.c > maxC) maxC = cell.c;
+  }
+  const rows = [...rowSet].sort((a, b) => a - b);
+  if (rows.length === 0) return undefined;
+  let end = rows[0];
+  for (let i = 1; i < rows.length; i++) {
+    if (rows[i] - rows[i - 1] > 50) break;
+    end = rows[i];
+  }
+  return { s: { r: rows[0], c: 0 }, e: { r: end, c: Math.max(maxC, 7) } };
+}
+
 export function parseExcelBuffer(
   buffer: Buffer,
   filename: string,
@@ -22,10 +42,12 @@ export function parseExcelBuffer(
   const workbook = XLSX.read(buffer, { type: "buffer" });
   const sheetName = workbook.SheetNames[0];
   const sheet = workbook.Sheets[sheetName];
+  const range = denseRange(sheet);
   const rows = XLSX.utils.sheet_to_json<(string | number | null)[]>(sheet, {
     header: 1,
     defval: null,
     raw: true,
+    range,
   });
 
   // Filename is authoritative when it encodes a DR id (sample DR-1249.xlsx

@@ -25,7 +25,9 @@ export function UploadForm({ compact = false }: { compact?: boolean }) {
       const ids: string[] = [];
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        setProgress(`Converting ${i + 1} of ${files.length}: ${file.name}`);
+        setProgress(
+          `Converting and verifying ${i + 1} of ${files.length}: ${file.name}`,
+        );
         const data = new FormData();
         data.append("file", file);
         const res = await fetch("/api/conversions", {
@@ -62,8 +64,8 @@ export function UploadForm({ compact = false }: { compact?: boolean }) {
           Upload DR Excel
         </h2>
         <p className="mt-1 text-sm text-[var(--muted)]">
-          Select one or many Excel files. Each file opens as its own tab with the
-          same pivot, comments, and verify tools.
+          Select one or many Excel files. Each file is converted and verified
+          automatically. PDFs stay locked until confidence is 100%.
         </p>
       </div>
       <label className="block">
@@ -88,7 +90,7 @@ export function UploadForm({ compact = false }: { compact?: boolean }) {
         <p className="text-sm font-medium text-[var(--danger)]">{error}</p>
       ) : null}
       <button type="submit" className="btn btn-primary" disabled={busy}>
-        {busy ? "Converting…" : "Convert to PDF"}
+        {busy ? "Converting and verifying…" : "Convert to PDF"}
       </button>
     </form>
   );

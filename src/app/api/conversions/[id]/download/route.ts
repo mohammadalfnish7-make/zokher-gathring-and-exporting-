@@ -17,6 +17,16 @@ export async function GET(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
+  if (kind !== "excel" && conversion.status !== "verified") {
+    return NextResponse.json(
+      {
+        error:
+          "PDF download is locked until verification confidence is 100%.",
+      },
+      { status: 403 },
+    );
+  }
+
   if (kind === "excel") {
     const bytes = await fs.readFile(conversion.sourcePath);
     return new NextResponse(bytes, {
