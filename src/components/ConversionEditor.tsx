@@ -116,6 +116,21 @@ export function ConversionEditor({
     }
   }
 
+  function downloadBothPdfs() {
+    const base = `/api/conversions/${conversion.id}/download`;
+    const trigger = (kind: string) => {
+      const a = document.createElement("a");
+      a.href = `${base}?kind=${kind}`;
+      a.download = "";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    };
+    trigger("pdf");
+    // Short gap so the browser allows the second separate file download
+    window.setTimeout(() => trigger("pdf-driver"), 400);
+  }
+
   const latest = conversion.agentRuns[0];
 
   return (
@@ -254,12 +269,13 @@ export function ConversionEditor({
 
       <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex flex-wrap gap-2">
-          <a
+          <button
+            type="button"
             className="btn btn-secondary !px-3 !py-1.5 text-sm"
-            href={`/api/conversions/${conversion.id}/download?kind=pdfs`}
+            onClick={downloadBothPdfs}
           >
             Download PDFs
-          </a>
+          </button>
           <a
             className="btn btn-secondary !px-3 !py-1.5 text-sm"
             href={`/api/conversions/${conversion.id}/download?kind=excel`}
